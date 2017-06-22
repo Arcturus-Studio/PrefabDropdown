@@ -15,6 +15,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
     List<UnityEngine.Object> prefabs;
     string[] names;
     int index = -1;
+    bool validPath = false;
     
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
@@ -22,10 +23,25 @@ public class PrefabDropdownDrawer : PropertyDrawer
         //finding all prefabs with the desired component
         if (prefabs == null)
             FindPrefabs(property);
+
+        //displaying a message if the user provided an invalid path
+        if (!validPath)
+        {
+            EditorGUI.LabelField(position, label.text + " - Invalid PrefabDropdown path");
+            return;
+        }
+
+        //displaying a message if there are no matching prefabs in the folder
+        if (prefabs.Count == 0)
+        {
+            EditorGUI.LabelField(position, label.text + " - No prefabs of type at path");
+            return;
+        }
+
         //finding the correct index when the component with this drawer is reshown in the inspector
         if (index == -1)
             index = Mathf.Max(0, prefabs.IndexOf((GameObject)property.objectReferenceValue));
-        
+
         position.width -= 20;
         //showing the popup, setting the properties object refrence when index is changed
         int i = EditorGUI.Popup(position, label.text, index, names);
@@ -73,8 +89,14 @@ public class PrefabDropdownDrawer : PropertyDrawer
             index = Mathf.Max(0, prefabs.IndexOf(property.objectReferenceValue));
     }
 
-    public static List<UnityEngine.Object> FindPrefabsContaining(string path, string type)
+    public List<UnityEngine.Object> FindPrefabsContaining(string path, string type)
     {
+        if (!AssetDatabase.IsValidFolder("Assets"+System.IO.Path.DirectorySeparatorChar+path))
+        {
+            validPath = false;
+            return new List<UnityEngine.Object>();
+        }
+        validPath = true;
         List<UnityEngine.Object> result = new List<UnityEngine.Object>();
         //searching for all .prefab files in the specified path and subfolders
         string[] fileEntries = System.IO.Directory.GetFiles(Application.dataPath + System.IO.Path.DirectorySeparatorChar + path, "*.prefab", System.IO.SearchOption.AllDirectories);
