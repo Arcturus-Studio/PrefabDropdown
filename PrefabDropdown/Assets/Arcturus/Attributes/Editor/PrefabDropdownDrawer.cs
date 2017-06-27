@@ -12,6 +12,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
     string[] names;
     int index = -1;
     bool validPath = false;
+    string none = "- null -";
     
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
@@ -36,7 +37,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
 
         //finding the correct index when the component with this drawer is reshown in the inspector
         if (index == -1)
-            index = Mathf.Max(0, prefabs.IndexOf((GameObject)property.objectReferenceValue));
+            index = Mathf.Max(0, 1+prefabs.IndexOf((GameObject)property.objectReferenceValue));
 
         position.width -= 20;
         //showing the popup, setting the properties object refrence when index is changed
@@ -44,10 +45,12 @@ public class PrefabDropdownDrawer : PropertyDrawer
         if (i != index || property.objectReferenceValue==null)
         {
             index = i;
-            if (prefabDropdown.propertyType == "GameObject")
-                property.objectReferenceValue = ((Component)prefabs[i]).gameObject;
+            if (index == 0)
+                property.objectReferenceValue = null;
+            else if (prefabDropdown.propertyType == "GameObject")
+                property.objectReferenceValue = ((Component)prefabs[i-1]).gameObject;
             else
-                property.objectReferenceValue = prefabs[i];
+                property.objectReferenceValue = prefabs[i-1];
         }
 
         position.x += position.width;
@@ -74,15 +77,16 @@ public class PrefabDropdownDrawer : PropertyDrawer
         //only scanning for gameobjects in the specified folder
         prefabs = FindPrefabsContaining(prefabsPath+prefabDropdown.addtionalPath, prefabDropdown.propertyType);
         //filling name array with the names of each prefab found for display in the dropdown
-        names = new string[prefabs.Count];
+        names = new string[prefabs.Count+1];
+        names[0] = none;
         for (int i = 0; i < prefabs.Count; i++)
-            names[i] = prefabs[i].name;
+            names[i+1] = prefabs[i].name;
         
         //ensures the index is adjusted in case a prefab was added/removed and the original index no longer represents the refrenced prefab
         if (prefabDropdown.propertyType == "GameObject")
-            index = Mathf.Max(0, prefabs.IndexOf(((GameObject)property.objectReferenceValue).GetComponent(prefabDropdown.propertyType)));
+            index = Mathf.Max(0, 1+prefabs.IndexOf(((GameObject)property.objectReferenceValue).GetComponent(prefabDropdown.propertyType)));
         else
-            index = Mathf.Max(0, prefabs.IndexOf(property.objectReferenceValue));
+            index = Mathf.Max(0,1+ prefabs.IndexOf(property.objectReferenceValue));
     }
 
     public List<UnityEngine.Object> FindPrefabsContaining(string path, string type)
