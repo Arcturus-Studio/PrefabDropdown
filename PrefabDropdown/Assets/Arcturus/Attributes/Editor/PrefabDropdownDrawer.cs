@@ -5,8 +5,6 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(PrefabDropdownAttribute))]
 public class PrefabDropdownDrawer : PropertyDrawer
 {
-    string prefabsPath = "Prefabs";
-
     PrefabDropdownAttribute prefabDropdown;
     List<UnityEngine.Object> prefabs;
     string[] names;
@@ -31,7 +29,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
         //displaying a message if the user provided an invalid path
         if (!validPath)
         {
-            EditorGUI.HelpBox(position, label.text + " - Invalid PrefabDropdown path", MessageType.Error);
+            EditorGUI.HelpBox(position, string.Format("{0} - path \"{1}\" does not exist in Assets", label.text, prefabDropdown.path), MessageType.Error);
             return;
         }
 
@@ -85,7 +83,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
             prefabDropdown.propertyType = property.type.Substring(6, property.type.Length - 7);
         
         //only scanning for gameobjects in the specified folder
-        prefabs = FindPrefabsContaining(prefabsPath+prefabDropdown.addtionalPath, prefabDropdown.propertyType);
+        prefabs = FindPrefabsContaining(prefabDropdown.path, prefabDropdown.propertyType);
         //filling name array with the names of each prefab found for display in the dropdown
         names = new string[prefabs.Count+1];
         names[0] = none;
