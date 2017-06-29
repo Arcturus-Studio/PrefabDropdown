@@ -14,9 +14,16 @@ public class PrefabDropdownDrawer : PropertyDrawer
     bool validPath = false;
     string none = "- null -";
     
+    static GUISkin editorSkin;
+    static GUIStyle prefabSelectStyle;
+
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         prefabDropdown = attribute as PrefabDropdownAttribute;
+        
+        if(editorSkin == null)
+            GetStyles();
+        
         //finding all prefabs with the desired component
         if (prefabs == null)
             FindPrefabs(property);
@@ -24,14 +31,14 @@ public class PrefabDropdownDrawer : PropertyDrawer
         //displaying a message if the user provided an invalid path
         if (!validPath)
         {
-            EditorGUI.LabelField(position, label.text + " - Invalid PrefabDropdown path");
+            EditorGUI.HelpBox(position, label.text + " - Invalid PrefabDropdown path", MessageType.Error);
             return;
         }
 
         //displaying a message if there are no matching prefabs in the folder
         if (prefabs.Count == 0)
         {
-            EditorGUI.LabelField(position, label.text + " - No prefabs of type at path");
+            EditorGUI.HelpBox(position, label.text + " - No prefabs of type at path", MessageType.Error);
             return;
         }
 
@@ -53,10 +60,12 @@ public class PrefabDropdownDrawer : PropertyDrawer
                 property.objectReferenceValue = prefabs[i-1];
         }
 
-        position.x += position.width;
-        position.width = 20;
+        position.x += position.width - 1;
+        position.width = 21;
+
+        EditorGUI.BeginDisabledGroup (!property.objectReferenceValue);
         //displaying a button to allow you to quickly find the selected object in the project window
-        if (GUI.Button(position, ">"))
+        if (GUI.Button(position, GUIContent.none, prefabSelectStyle))
         {
             if (property.objectReferenceValue != null)
             {
@@ -66,6 +75,7 @@ public class PrefabDropdownDrawer : PropertyDrawer
                     Selection.activeGameObject = ((Component)property.objectReferenceValue).gameObject;
             }
         }
+        EditorGUI.EndDisabledGroup();
     }
 
     public void FindPrefabs(SerializedProperty property)
@@ -114,6 +124,13 @@ public class PrefabDropdownDrawer : PropertyDrawer
                 result.Add(o);
         }
         return result;
+    }
+
+    private void GetStyles()
+    {
+        editorSkin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
+        var guiStyleState = EditorGUIUtility.isProSkin ? editorSkin.GetStyle("IN ObjectField").focused : editorSkin.GetStyle("IN ObjectField").normal;
+        prefabSelectStyle = new GUIStyle(){ normal = guiStyleState };
     }
     
 }
